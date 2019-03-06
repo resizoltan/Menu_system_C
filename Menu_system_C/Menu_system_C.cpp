@@ -10,56 +10,120 @@
 /*                                                Mouse Menu                                                    */
 /*==============================================================================================================*/
 typedef struct item item_t;
+typedef item_t* itemPtr_t;
+typedef itemPtr_t* itemIterator_t;
+typedef itemPtr_t* itemPtrArr_t;
 typedef struct menu menu_t;
 typedef void(*onSelectCallback_t)(menu_t*);
 
 
 typedef struct item {
-	onSelectCallback_t onSelectCallback_ = NULL;
-	item_t *items_ = NULL;
-	int item_count_ = 0;
-	int item_iterator_ = 0;
+	onSelectCallback_t onSelectCallback_;// = NULL;
+	itemPtrArr_t *items_;// = NULL;
+	itemIterator_t item_iterator_;// = NULL;
+	itemIterator_t last_item_;// = NULL;
 }item_t;
 
 typedef struct menu {
-	item_t *allItems_ = NULL;
-	item_t *cur_item_ = NULL;
-};
+	itemPtrArr_t *allItems_;// = NULL;
+	itemPtr_t curr_item_;// = NULL;
+}menu_t;
 
-//typedef struct menu menu_t;
-#define m_declareItem(name, onSelectCallback, item_count, ...)	\
+/*----Macro for creating menu items----*/
+/*		name: name of item
+		onSelectCallback: callback function to execute when this item is selected
+		item_count: number of items contained in this item (min: 1 (parent item))
+		...: items to be contained by this item (min: 1 (parent item))
+*/
+#define m_defineItem(name, onSelectCallback, item_count, ...)	\
 item_t *name_##subitems[] = {__VA_ARGS__};			\
-item_t name##Item{									\
-	onSelectCallback_ = onSelectCallback;			\
-	items_ = name_##subitems;						\
-	item_count_ = item_count;						\
-	active_item_ = 0;								\
+item_t name{									\
+	.onSelectCallback_ = onSelectCallback,			\
+	.items_ = name_##subitems,						\
+	.item_iterator_ = name_##subitems[0],						\
+	.last_item_ = name_##subitems[item_count - 1]			\
 };
 
 #define m_declareMenu(name, init_item, ...)			\
 item_t *name_##all_items[] = {__VA_ARGS__};			\
 typedef struct{										\
 	all_items_ = name_##all_items;					\
-	cur_item_ = init_item;							\
+	curr_item_ = init_item;							\
 }name##Menu;
 
 void select(menu_t* menu) {
-	menu->cur_item_->onSelectCallback_(menu);
+	itemIterator_t it = menu->curr_item_->item_iterator_;
+	(*it)->onSelectCallback_(menu);
+	return;
 }
 
-/*---------------------------------------------- Main Menu ---------------------------------------------*/
+void next(menu_t *menu) {
+	itemPtr_t curr_item = menu->curr_item_;
+	itemIterator_t it = curr_item->item_iterator_;
+	if (it != curr_item->last_item_) {
+		it++;
+	}
+	else {
+		it = &(curr_item->items_[0]);
+	}
+	return;
+}
 
-//void dummy1(void);
-//void dummy2(void);
-//void dummy3(void);
+void enterTopic(menu_t *menu) {
+	menu->curr_item_ = *(menu->curr_item_->item_iterator_);
+	return;
+}
+
+/*---------------------------------------------- My Menu ---------------------------------------------*/
+item_t root = { .onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL };
+item_t submenu1 = { .onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL };
+item_t submenu2 = { .onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL };
+
+//#define itemCount 3
+itemPtrArr_t root_subitems[] = {&root, &submenu1, &submenu2};
+
+//item_t topic1_subitems[] = { &root };
 //
-//void (*dummyFcnPtr[])(void) = { dummy1, dummy2, dummy3};
+//item_t root = { enterTopic, &root_subitems, &root_subitems[0], &root_subitems[count - 1] };
+//
+//item_t topic1;
+//item_t topic2;
 
 
+//root->onSelectCallback_ = enterTopic;
+// {
+//	.onSelectCallback_ = enterTopic,
+//	.items_ = root_subitems,
+//	.item_iterator_ = &(root_subitems[0]),
+//
+//};
+
+
+
+//m_defineItem(root, enterTopic, 3, &topic1, &topic2, &root);
+
+int var1Ptr[1];// = { 5 };
+int var2Ptr[1];
+int var3Ptr[1];
+
+int itemek[] = { 5 };
+int *items[] = { var1Ptr, var2Ptr, var3Ptr };
 
 int main()
 {
-	printf("Main menu");
+	*var1Ptr = 1;
+	*var2Ptr = 2;
+	*var3Ptr = 3;
+
+	for (int i = 0; i < 3; i++) {
+		printf("%i\n", *(items[i]));
+	}
+
+
+	printf("item_t size %i\n", sizeof(item_t));
+	printf("item_t* size %i\n", sizeof(item_t*));
+
+	printf("Main menu\n");
 
 }
 
