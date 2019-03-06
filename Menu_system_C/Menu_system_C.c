@@ -26,10 +26,30 @@ typedef struct item {
 	int itemCount;
 }item_t;
 
+typedef struct item_definition {
+	char *name;
+	onSelectCallback_t onSelectCallback_;
+};
+
 typedef struct menu {
-	item_t** *all_items_;// = NULL;
+	itemPtrArr_t *all_items_;// = NULL;
 	itemPtr_t curr_item_;// = NULL;
 }menu_t;
+
+char item_names[][20] = { "root", "sub1", "sub2" };
+
+#define newItem(name)				\
+{									\
+	.name = name;					\
+	.onSelectCallback_ = NULL;		\
+	.items_ = NULL;					\
+	.item_iterator_ = NULL;			\
+	.last_item_ = NULL;				\
+	.itemCount = 0;					\
+}
+
+#define declareItems(menu_name, ...)					\
+itemPtr_t menu_name##_all_items = {__VA_ARGS__}
 
 /*----Macro for creating menu items----*/
 /*		name: name of item
@@ -37,22 +57,18 @@ typedef struct menu {
 		item_count: number of items contained in this item (min: 1 (parent item))
 		...: items to be contained by this item (min: 1 (parent item))
 */
-#define m_defineSubmenu(name, item_count, ...)	\
-item_t name{									\
-	.onSelectCallback_ = onSelectCallback,			\
-	.items_ = name_##subitems,						\
-	.item_iterator_ = name_##subitems[0],						\
-	.last_item_ = name_##subitems[item_count - 1]			\
-};														\
-itemPtr_t name_##subitems[] = { __VA_ARGS__ };			
+#define m_defineSubmenu(name, onSelectCallback, item_count, ...)	\
+itemPtr_t name_##subitems[] = { __VA_ARGS__ };						\
+onSelectCallback_t name_##onSelectCallback = onSelectCallback;		\
+int name_##item_count = item_count;									\
+			
 
 
-#define m_declareMenu(name, init_item, ...)			\
-item_t *name_##all_items[] = {__VA_ARGS__};			\
-typedef struct{										\
-	all_items_ = name_##all_items;					\
-	curr_item_ = init_item;							\
-}name##Menu;
+#define m_declareMenu(name, init_item)				\
+menu_t name_##menu = {									\
+	.all_items_ = &name_##all_items;					\
+	.curr_item_ = init_item;							\
+};
 
 void select(menu_t* menu) {
 	itemIterator_t it = menu->curr_item_->item_iterator_;
@@ -90,6 +106,24 @@ void enterTopic(menu_t *menu) {
 
 
 /*---------------------------------------------- My Menu ---------------------------------------------*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 char rootname[] = "root"; 
 #define rootItemCount 3
 char sub1name[] = "sub1";
