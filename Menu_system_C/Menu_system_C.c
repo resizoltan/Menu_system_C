@@ -5,7 +5,6 @@
 #include <stdio.h>
 //#include <stdarg.h>
 
-
 /*==============================================================================================================*/
 /*                                                Mouse Menu                                                    */
 /*==============================================================================================================*/
@@ -23,20 +22,16 @@ typedef struct item {
 	itemPtrArr_t *items_;// = NULL;
 	itemIterator_t item_iterator_;// = NULL;
 	itemIterator_t last_item_;// = NULL;
-	int itemCount;
+	int item_count_;
 }item_t;
-
-typedef struct item_definition {
-	char *name;
-	onSelectCallback_t onSelectCallback_;
-};
 
 typedef struct menu {
 	itemPtrArr_t *all_items_;// = NULL;
 	itemPtr_t curr_item_;// = NULL;
 }menu_t;
 
-char item_names[][20] = { "root", "sub1", "sub2" };
+#define item_count 3
+char item_names[3][20] = { root, sub1, sub2 };
 
 #define newItem(name)				\
 {									\
@@ -45,8 +40,11 @@ char item_names[][20] = { "root", "sub1", "sub2" };
 	.items_ = NULL;					\
 	.item_iterator_ = NULL;			\
 	.last_item_ = NULL;				\
-	.itemCount = 0;					\
+	.item_count_ = 0;					\
 }
+
+void fv();
+#define myFunc() fv()
 
 #define declareItems(menu_name, ...)					\
 itemPtr_t menu_name##_all_items = {__VA_ARGS__}
@@ -58,17 +56,29 @@ itemPtr_t menu_name##_all_items = {__VA_ARGS__}
 		...: items to be contained by this item (min: 1 (parent item))
 */
 #define m_defineSubmenu(name, onSelectCallback, item_count, ...)	\
-itemPtr_t name_##subitems[] = { __VA_ARGS__ };						\
-onSelectCallback_t name_##onSelectCallback = onSelectCallback;		\
-int name_##item_count = item_count;									\
+itemPtr_t name##_subitems[] = { __VA_ARGS__ };						\
+onSelectCallback_t name##_onSelectCallback = onSelectCallback;		\
+int name##_item_count = item_count;									\
 			
-
-
-#define m_declareMenu(name, init_item)				\
-menu_t name_##menu = {									\
+#define m_declareMenu(name, init_item)					\
+menu_t name##_menu = {									\
 	.all_items_ = &name_##all_items;					\
 	.curr_item_ = init_item;							\
 };
+
+#define linkNext(menu, item_name, item_index)													\
+itemPtr_t item = (*menu.all_items_)[item_index];												\
+item->items_ = &item_name##_subitems;															\
+item->item_iterator_ = item_name##_item_count > 0 ? &(*item->items_)[0] : NULL;					\
+item->last_item_ = item_name##_item_count > 0 ? &(*item->items_)[item_name##_item_count] : NULL
+
+
+#define linkMenu(menu) {													\
+	for (int item_index = 0; item_index < item_count; item_index++) {		\
+		linkNext(menu, item_names[item_index], item_index);					\
+	}																		\
+}
+
 
 void select(menu_t* menu) {
 	itemIterator_t it = menu->curr_item_->item_iterator_;
@@ -131,9 +141,9 @@ char sub1name[] = "sub1";
 char sub2name[] = "sub2";
 #define sub2ItemCount 1
 
-item_t root = { .name_ = rootname,.onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL , .itemCount = rootItemCount};
-item_t submenu1 = { .name_ = sub1name,.onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL ,.itemCount = sub1ItemCount };
-item_t submenu2 = { .name_ = sub2name,.onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL ,.itemCount = sub2ItemCount };
+item_t root = { .name_ = rootname,.onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL , .item_count_ = rootItemCount};
+item_t submenu1 = { .name_ = sub1name,.onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL ,.item_count_ = sub1ItemCount };
+item_t submenu2 = { .name_ = sub2name,.onSelectCallback_ = enterTopic,.items_ = NULL,.item_iterator_ = NULL,.last_item_ = NULL ,.item_count_ = sub2ItemCount };
 
 itemPtr_t root_subitems[] = {&root, &submenu1, &submenu2};
 itemPtrArr_t root_subitems_ptr = root_subitems;
@@ -149,18 +159,20 @@ itemPtrArr_t *subitems[] = {&root_subitems_ptr, &sub1_subitems_ptr, &sub2_subite
 
 menu_t main_menu = {.all_items_= &main_menu_allitems_ptr, .curr_item_ = &root};
 
-void linkMenu(menu_t* menu){
-    for(int itemIndex = 0; itemIndex < itemCount; itemIndex++){
-		item_t *item = (*menu->all_items_)[itemIndex];
-        item->items_=subitems[itemIndex];
-		item->item_iterator_ = &(*subitems[itemIndex])[0];
-		item->last_item_ = &(*subitems[itemIndex])[item->itemCount - 1];
-    }
-}
+//void linkMenu(menu_t* menu){
+//    for(int itemIndex = 0; itemIndex < itemCount; itemIndex++){
+//		item_t *item = (*menu->all_items_)[itemIndex];
+//        item->items_=subitems[itemIndex];
+//		item->item_iterator_ = &(*subitems[itemIndex])[0];
+//		item->last_item_ = &(*subitems[itemIndex])[item->itemCount - 1];
+//    }
+//}
 
 int main()
 {
-    linkMenu(&main_menu);
+	linkMenu(&main_menu);
+
+	myFunc();
 
 
 	printf("Main menu\n");
